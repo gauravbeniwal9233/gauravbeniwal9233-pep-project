@@ -4,8 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import DAO.AccountDAO;
+import DAO.MessageDAO;
 import Model.Account;
+import Model.Message;
 import Service.AccountService;
+import Service.MessageService;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -17,10 +20,13 @@ import io.javalin.http.Context;
 public class SocialMediaController {
 
     private AccountService accountService;
+    private MessageService messageService;
 
     public SocialMediaController() {
         AccountDAO accountDAO = new AccountDAO();
+        MessageDAO messageDAO = new MessageDAO();
         this.accountService = new AccountService(accountDAO);
+        this.messageService = new MessageService(messageDAO, accountDAO);
     }
 
     /**
@@ -32,6 +38,7 @@ public class SocialMediaController {
         Javalin app = Javalin.create();
         app.post("/register", this::registerAccountHandler);
         app.post("/login", this::loginHandler);
+        app.post("/messages", this::createMessageHandler);
         return app;
     }
 
@@ -65,6 +72,18 @@ public class SocialMediaController {
             ctx.json(mapper.writeValueAsString(registeredAccount)).status(200);
         } else {
             ctx.status(401);
+        } 
+    }
+
+    private void createMessageHandler(Context ctx) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        Message message = mapper.readValue(ctx.body(), Message.class);
+        Message createdMessage = messageService.createMessage(message);
+
+        if (createdMessage != null) {
+            ctx.json(mapper.writeValueAsString(createdMessage)).status(200);
+        } else {
+            ctx.status(400);
         } 
     }
 
