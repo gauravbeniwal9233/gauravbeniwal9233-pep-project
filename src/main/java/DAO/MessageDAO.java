@@ -114,4 +114,28 @@ public class MessageDAO {
         }
         return null;
     }
+
+    public Message updateMessage(int messageId, String newMessageText) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+
+            Message existingmMessage = getMessageById(messageId);
+            if (existingmMessage == null) {
+                return null;
+            }
+
+            String sql = "update message set message_text = ? where message_id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, newMessageText);
+            ps.setInt(2, messageId);
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows > 0) {
+                existingmMessage.setMessage_text(newMessageText);
+                return existingmMessage;
+            }
+        } catch (SQLException e) {
+            System.out.println("Error insertinf: " + e.getMessage());
+        }
+        return null;
+    }
 }
