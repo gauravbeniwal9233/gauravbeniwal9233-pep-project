@@ -10,21 +10,21 @@ public class AccountService {
         this.accountDAO = accountDAO;
     }
 
-    public Account registerAccount (String username, String password) throws IllegalArgumentException {
-        if (username == null || username.isBlank() || password == null || password.length() < 4) {
-            throw new IllegalArgumentException("Invalid input !!");
+    public Account registerAccount (Account account) {
+        if (account.getUsername() == null || account.getUsername().isBlank() || account.getPassword() == null || account.getPassword().length() < 4) {
+            return null;
+        } else if (accountDAO.findByUsername(account.getUsername()) != null) {
+            return null;
         }
 
-        if (accountDAO.findByUsername(username) != null) {
-            throw new IllegalArgumentException("user already exists !!");
+        return accountDAO.insertAccount(account);
+    }
+
+    public Account login (String username, String password) {
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            return null;
         }
 
-        Account newAccount = new Account(username, password);
-        Account createdAccount = accountDAO.insertAccount(newAccount);
-        if (createdAccount == null) {
-            throw new RuntimeException("Failed to register account !!");
-        }
-
-        return createdAccount;
+        return accountDAO.findByUsernameAndPassword(username, password);
     }
 }

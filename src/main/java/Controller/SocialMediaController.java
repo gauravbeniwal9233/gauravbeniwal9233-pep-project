@@ -3,6 +3,7 @@ package Controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import DAO.AccountDAO;
 import Model.Account;
 import Service.AccountService;
 import io.javalin.Javalin;
@@ -17,8 +18,9 @@ public class SocialMediaController {
 
     private AccountService accountService;
 
-    public SocialMediaController(AccountService accountService) {
-        this.accountService = accountService;
+    public SocialMediaController() {
+        AccountDAO accountDAO = new AccountDAO();
+        this.accountService = new AccountService(accountDAO);
     }
 
     /**
@@ -29,6 +31,7 @@ public class SocialMediaController {
     public Javalin startAPI() {
         Javalin app = Javalin.create();
         app.post("/register", this::registerAccountHandler);
+        app.post("/login", this::loginHandler);
         return app;
     }
 
@@ -36,22 +39,33 @@ public class SocialMediaController {
      * This is an example handler for an example endpoint.
      * @param context The Javalin Context object manages information about both the HTTP request and response.
      */
-    private void exampleHandler(Context context) {
-        context.json("sample text");
-    }
+    // private void exampleHandler(Context context) {
+    //     context.json("sample text");
+    // }
 
     private void registerAccountHandler(Context ctx) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         Account account = mapper.readValue(ctx.body(), Account.class);
+        Account registeredAccount = accountService.registerAccount(account);
 
-        try {
-            Account registeredAccount = accountService.registerAccount(account.getUsername(), account.getPassword());
+        if (registeredAccount != null) {
+            //ctx.json(mapper.writeValueAsString(addedBook));
             ctx.json(mapper.writeValueAsString(registeredAccount)).status(200);
-        } catch (IllegalArgumentException e) {
-            ctx.status(400).result(e.getMessage());
-        } catch (Exception e) {
-            ctx.status(500).result("error occured !!");
+        } else {
+            ctx.status(400);
         }
+    }
+
+    private void loginHandler(Context ctx) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        Account loginRequest = mapper.readValue(ctx.body(), Account.class);
+        Account registeredAccount = accountService.login(loginRequest.getUsername(), loginRequest.getPassword());
+
+        if (registeredAccount != null) {
+            ctx.json(mapper.writeValueAsString(registeredAccount)).status(200);
+        } else {
+            ctx.status(401);
+        } 
     }
 
 

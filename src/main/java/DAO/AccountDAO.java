@@ -37,17 +37,31 @@ public class AccountDAO {
             if (affectedRows > 0) {
                 ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
                 if (generatedKeys.next()) {
-                    account.setAccount_id(generatedKeys.getInt(1));
-                    return account;
+                    int accountId = generatedKeys.getInt(1);
+                    return new Account(accountId, account.getUsername(), account.getPassword());
                 }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error insertinf: " + e.getMessage());
+            return null;
+        }
+        return null;
+    }
+
+    public Account findByUsernameAndPassword (String username, String password) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+            String sql = "select * from account where username = ? and password = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, username);
+            preparedStatement.setString(2, password);
+            ResultSet rs = preparedStatement.executeQuery();
+            if (rs.next()) {
+                return new Account(rs.getInt("account_id"), rs.getString("username"), rs.getString("password"));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
         return null;
     }
-
-    // public Account findByUsernameAndPassword (String username, String password) {
-    //     Connection connection = ConnectionUtil.getConnection();
-    // }
 }
